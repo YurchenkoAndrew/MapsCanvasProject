@@ -22,8 +22,8 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
   deltaY: number = 1;
   @HostListener('wheel', ['$event']) onMousWheel($event: WheelEvent) {
     if ($event.deltaY > 0) {
-      if(this.startScale == this.deltaY){
-        return
+      if (this.startScale == this.deltaY) {
+        return;
       }
       this.deltaY = parseFloat((this.deltaY - 0.05).toFixed(2));
     } else {
@@ -80,15 +80,15 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
     this.image.onload = () => {
       const scaleWidth = this.windowWidth / this.image.width;
       const scaleHeight = this.windowHeight / this.image.height;
-      this.startScale = parseFloat((Math.min(scaleWidth, scaleHeight)).toFixed(2));
+      this.startScale = parseFloat(
+        Math.min(scaleWidth, scaleHeight).toFixed(2)
+      );
       this.deltaY = this.startScale;
       this.canvas.nativeElement.width = this.image.width;
       this.canvas.nativeElement.height = this.image.height;
       this.ctx.drawImage(this.image, 0, 0, this.image.width, this.image.height);
       this.canvas.nativeElement.style.transform = `scale(${this.startScale}, ${this.startScale})`;
       this.ctx.save();
-      // console.log(this.image.width);
-      // console.log(this.image.height);
       this.createMapObjects(this.mapItem?.map_data!);
     };
   }
@@ -134,13 +134,9 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
   zoomRemove(): void {
     this.deltaY = parseFloat((this.deltaY - 0.1).toFixed(2));
     this.canvas.nativeElement.style.transform = `scale(${this.deltaY}, ${this.deltaY})`;
-    console.log(this.startScale);
-    console.log(this.deltaY);
   }
 
   private mouseMove($event: MouseEvent): void {
-    // this.pointToZoomX = $event.offsetX;
-    // this.pointToZoomY = $event.offsetY;
-    // console.log(this.pointToZoomX + '-' + this.pointToZoomY);
+    console.log($event.offsetX + " - " + $event.offsetY)
   }
 }
