@@ -18,8 +18,12 @@ import { MapData } from '../../entities/map-data';
   styleUrls: ['./map.component.scss'],
 })
 export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
+  // Достаем канвас из ДОМ
   @ViewChild('canvas', { static: true }) canvas!: ElementRef<HTMLCanvasElement>;
+
   deltaY: number = 1;
+
+  // Слушаем колесико мышки
   @HostListener('wheel', ['$event']) onMousWheel($event: WheelEvent) {
     if ($event.deltaY > 0) {
       if (this.startScale == this.deltaY) {
@@ -49,8 +53,10 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
   pointToZoomY = 10;
 
   constructor(private service: MapService) {
+    // Получаем карту
     this.mapItemSub = service.getMap(36).subscribe((response) => {
       this.mapItem = response;
+      // Получаем изображение для карты
       this.mapItemImageSub = service.getImageMap(response.image).subscribe({
         next: (response: Blob) => {
           this.image.src = URL.createObjectURL(response);
@@ -61,6 +67,7 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
     });
   }
   ngOnDestroy(): void {
+    // Отписываемся от наблюдателей
     if (this.mapItemSub) {
       this.mapItemSub.unsubscribe;
     }
@@ -78,6 +85,7 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
   private initCanvas(): void {
     this.ctx = this.canvas.nativeElement.getContext('2d')!;
     this.image.onload = () => {
+      // Масштабируем канвас по изображению и согласно размеру экрана
       const scaleWidth = this.windowWidth / this.image.width;
       const scaleHeight = this.windowHeight / this.image.height;
       this.startScale = parseFloat(
@@ -86,32 +94,38 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
       this.deltaY = this.startScale;
       this.canvas.nativeElement.width = this.image.width;
       this.canvas.nativeElement.height = this.image.height;
+      // Ставим изображение карты в канвас
       this.ctx.drawImage(this.image, 0, 0, this.image.width, this.image.height);
+      // Применяем стилями масштабирование изображения и канваса
       this.canvas.nativeElement.style.transform = `scale(${this.startScale}, ${this.startScale})`;
+      // Сохраняем в стек текущее состояние
       this.ctx.save();
+      // Добавляем объекты на канвас
       this.createMapObjects(this.mapItem?.map_data!);
     };
   }
 
-  private dimensionCalculations(
-    windowWidth: number,
-    windowHeight: number,
-    imageWidth: number,
-    imageHeight: number
-  ): void {
-    const aspectRatio = imageWidth / imageHeight;
-    console.log(aspectRatio);
-    const windowRatio = windowWidth / windowHeight;
-    console.log(windowRatio);
-    if (windowRatio > aspectRatio) {
-      this.image.width = windowWidth;
-      this.image.height = windowWidth / aspectRatio;
-    } else {
-      this.image.width = windowHeight * aspectRatio;
-      this.image.height = windowHeight;
-    }
-  }
+  // Не используется. Изначально так хотел расчеты делать
+  // private dimensionCalculations(
+  //   windowWidth: number,
+  //   windowHeight: number,
+  //   imageWidth: number,
+  //   imageHeight: number
+  // ): void {
+  //   const aspectRatio = imageWidth / imageHeight;
+  //   console.log(aspectRatio);
+  //   const windowRatio = windowWidth / windowHeight;
+  //   console.log(windowRatio);
+  //   if (windowRatio > aspectRatio) {
+  //     this.image.width = windowWidth;
+  //     this.image.height = windowWidth / aspectRatio;
+  //   } else {
+  //     this.image.width = windowHeight * aspectRatio;
+  //     this.image.height = windowHeight;
+  //   }
+  // }
 
+  // Ставим объекты на канвас
   private createMapObjects(mapData: MapData[]): void {
     if (mapData.length > 0) {
       mapData.map((mapData: MapData) => {
@@ -125,8 +139,11 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
         );
       });
     }
+    // Возвращаем состояние из стека
     this.ctx.restore();
   }
+
+  // Методы для кнопки, для мобильных устройств
   zoomAdd(): void {
     this.deltaY = parseFloat((this.deltaY + 0.1).toFixed(2));
     this.canvas.nativeElement.style.transform = `scale(${this.deltaY}, ${this.deltaY})`;
@@ -137,6 +154,6 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
   }
 
   private mouseMove($event: MouseEvent): void {
-    console.log($event.offsetX + " - " + $event.offsetY)
+    console.log($event.offsetX + ' - ' + $event.offsetY);
   }
 }
