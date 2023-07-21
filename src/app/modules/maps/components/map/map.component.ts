@@ -44,6 +44,8 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
   windowHeight = window.innerHeight;
   startScale: number = 1;
   mapItem?: Map;
+  mapData?: MapData[];
+  objects: any;
   mapItemSub: Subscription;
   mapItemImageSub?: Subscription;
   private ctx!: CanvasRenderingContext2D;
@@ -79,7 +81,7 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
     this.initCanvas();
   }
   ngAfterContentChecked(): void {
-    this.canvas.nativeElement.addEventListener('mousemove', this.mouseMove);
+    this.canvas.nativeElement.addEventListener('click', this.mouseClick);
   }
 
   private initCanvas(): void {
@@ -105,33 +107,24 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
     };
   }
 
-  // Не используется. Изначально так хотел расчеты делать
-  // private dimensionCalculations(
-  //   windowWidth: number,
-  //   windowHeight: number,
-  //   imageWidth: number,
-  //   imageHeight: number
-  // ): void {
-  //   const aspectRatio = imageWidth / imageHeight;
-  //   console.log(aspectRatio);
-  //   const windowRatio = windowWidth / windowHeight;
-  //   console.log(windowRatio);
-  //   if (windowRatio > aspectRatio) {
-  //     this.image.width = windowWidth;
-  //     this.image.height = windowWidth / aspectRatio;
-  //   } else {
-  //     this.image.width = windowHeight * aspectRatio;
-  //     this.image.height = windowHeight;
-  //   }
-  // }
+  private addObject(
+    left: number,
+    top: number,
+    width: number,
+    height: number
+  ): void {
+    this.objects.push({ left, top, width, height });
+  }
 
   // Ставим объекты на канвас
   private createMapObjects(mapData: MapData[]): void {
     if (mapData.length > 0) {
+      this.mapData = mapData;
+      console.log(mapData);
       mapData.map((mapData: MapData) => {
         this.ctx.strokeStyle = 'blue';
         this.ctx.lineWidth = 10;
-        this.ctx.strokeRect(
+        const rect = this.ctx.strokeRect(
           mapData.left,
           mapData.top,
           mapData.width,
@@ -153,7 +146,20 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
     this.canvas.nativeElement.style.transform = `scale(${this.deltaY}, ${this.deltaY})`;
   }
 
-  private mouseMove($event: MouseEvent): void {
+  private mouseClick($event: MouseEvent): void {
+    const x = $event.offsetX;
+    const y = $event.offsetY;
     console.log($event.offsetX + ' - ' + $event.offsetY);
+    for (const obj of this.mapItem?.map_data!) {
+      if (
+        x >= obj.left &&
+        x <= obj.left + obj.width &&
+        y >= obj.top &&
+        y <= obj.top + obj.height
+      ) {
+        console.log(obj.id);
+        break;
+      }
+    }
   }
 }
