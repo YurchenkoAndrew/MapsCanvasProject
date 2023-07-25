@@ -1,6 +1,6 @@
-import { MapData } from './map-data';
+import {MapData} from './map-data';
 
-export interface Map {
+export interface MapItem {
   id: number;
   title: string;
   image: string;

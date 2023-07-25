@@ -1,15 +1,15 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { Map } from '../entities/map';
-import { environment } from 'src/environments/environment';
+import {Injectable} from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {Observable} from 'rxjs';
+import {MapItem} from '../entities/mapItem';
+import {environment} from 'src/environments/environment';
 
 @Injectable()
 export class MapService {
   constructor(private http: HttpClient) {}
 
-  getMap(id: number): Observable<Map> {
-    return this.http.get<Map>(environment.apiUrl + 'map/' + id);
+  getMap(id: number): Observable<MapItem> {
+    return this.http.get<MapItem>(environment.apiUrl + 'map/' + id);
   }
 
   getImageMap(path: string): Observable<Blob> {

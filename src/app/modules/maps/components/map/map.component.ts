@@ -1,16 +1,10 @@
-import {
-  AfterContentChecked,
-  Component,
-  ElementRef,
-  HostListener,
-  OnDestroy,
-  OnInit,
-  ViewChild,
-} from '@angular/core';
-import { MapService } from '../../services/map.service';
-import { Map } from '../../entities/map';
-import { Subscription } from 'rxjs';
-import { MapData } from '../../entities/map-data';
+import {AfterContentChecked, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild,} from '@angular/core';
+import {MapService} from '../../services/map.service';
+import {MapItem} from '../../entities/mapItem';
+import {Subscription} from 'rxjs';
+import {MapData} from '../../entities/map-data';
+import {MatDialog} from "@angular/material/dialog";
+import {MapDataComponent} from "../map-data/map-data.component";
 
 @Component({
   selector: 'app-map',
@@ -19,12 +13,12 @@ import { MapData } from '../../entities/map-data';
 })
 export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
   // Достаем канвас из ДОМ
-  @ViewChild('canvas', { static: true }) canvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('canvas', {static: true}) canvas!: ElementRef<HTMLCanvasElement>;
 
   deltaY: number = 1;
 
   // Слушаем колесико мышки
-  @HostListener('wheel', ['$event']) onMousWheel($event: WheelEvent) {
+  @HostListener('wheel', ['$event']) onMouseWheel($event: WheelEvent) {
     if ($event.deltaY > 0) {
       if (this.startScale == this.deltaY) {
         return;
@@ -33,19 +27,16 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
     } else {
       this.deltaY = parseFloat((this.deltaY + 0.05).toFixed(2));
     }
-    console.log($event.clientX);
     // this.canvas.nativeElement.style.transformOrigin = this.pointToZoomX + "px " + this.pointToZoomY + "px";
     this.canvas.nativeElement.style.transform = `scale(${this.deltaY}, ${this.deltaY})`;
   }
 
-  @ViewChild('canvasWrapper', { static: true })
+  @ViewChild('canvasWrapper', {static: true})
   canvasWrapper!: ElementRef<HTMLDivElement>;
   windowWidth = window.innerWidth;
   windowHeight = window.innerHeight;
   startScale: number = 1;
-  mapItem?: Map;
-  mapData?: MapData[];
-  objects: any;
+  mapItem?: MapItem;
   mapItemSub: Subscription;
   mapItemImageSub?: Subscription;
   private ctx!: CanvasRenderingContext2D;
@@ -54,7 +45,7 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
   pointToZoomX = 10;
   pointToZoomY = 10;
 
-  constructor(private service: MapService) {
+  constructor(private service: MapService, private dialog: MatDialog) {
     // Получаем карту
     this.mapItemSub = service.getMap(36).subscribe((response) => {
       this.mapItem = response;
@@ -63,25 +54,31 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
         next: (response: Blob) => {
           this.image.src = URL.createObjectURL(response);
         },
-        error: () => {},
-        complete: () => {},
+        error: () => {
+        },
+        complete: () => {
+        },
       });
     });
   }
+
   ngOnDestroy(): void {
     // Отписываемся от наблюдателей
     if (this.mapItemSub) {
-      this.mapItemSub.unsubscribe;
+      this.mapItemSub.unsubscribe();
     }
     if (this.mapItemImageSub) {
-      this.mapItemImageSub.unsubscribe;
+      this.mapItemImageSub.unsubscribe();
     }
+    this.canvas.nativeElement.removeEventListener<"mousemove">('mousemove', this.mouseMove.bind(this));
+    this.canvas.nativeElement.removeEventListener<"dblclick">('dblclick', this.mouseClick.bind(this));
   }
+
   ngOnInit(): void {
     this.initCanvas();
   }
+
   ngAfterContentChecked(): void {
-    this.canvas.nativeElement.addEventListener('click', this.mouseClick);
   }
 
   private initCanvas(): void {
@@ -107,24 +104,13 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
     };
   }
 
-  private addObject(
-    left: number,
-    top: number,
-    width: number,
-    height: number
-  ): void {
-    this.objects.push({ left, top, width, height });
-  }
-
   // Ставим объекты на канвас
   private createMapObjects(mapData: MapData[]): void {
     if (mapData.length > 0) {
-      this.mapData = mapData;
-      console.log(mapData);
       mapData.map((mapData: MapData) => {
         this.ctx.strokeStyle = 'blue';
         this.ctx.lineWidth = 10;
-        const rect = this.ctx.strokeRect(
+        this.ctx.strokeRect(
           mapData.left,
           mapData.top,
           mapData.width,
@@ -134,6 +120,8 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
     }
     // Возвращаем состояние из стека
     this.ctx.restore();
+    this.canvas.nativeElement.addEventListener<"mousemove">('mousemove', this.mouseMove.bind(this));
+    this.canvas.nativeElement.addEventListener<"dblclick">('dblclick', this.mouseClick.bind(this));
   }
 
   // Методы для кнопки, для мобильных устройств
@@ -141,15 +129,26 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
     this.deltaY = parseFloat((this.deltaY + 0.1).toFixed(2));
     this.canvas.nativeElement.style.transform = `scale(${this.deltaY}, ${this.deltaY})`;
   }
+
   zoomRemove(): void {
     this.deltaY = parseFloat((this.deltaY - 0.1).toFixed(2));
     this.canvas.nativeElement.style.transform = `scale(${this.deltaY}, ${this.deltaY})`;
   }
 
+  private mouseMove($event: MouseEvent): void {
+    this.objectCheck($event);
+  }
+
   private mouseClick($event: MouseEvent): void {
+    const id: number | void = this.objectCheck($event);
+    if (id) {
+      this.openMapData(id);
+    }
+  }
+
+  private objectCheck($event: MouseEvent): number | void {
     const x = $event.offsetX;
     const y = $event.offsetY;
-    console.log($event.offsetX + ' - ' + $event.offsetY);
     for (const obj of this.mapItem?.map_data!) {
       if (
         x >= obj.left &&
@@ -157,9 +156,15 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
         y >= obj.top &&
         y <= obj.top + obj.height
       ) {
-        console.log(obj.id);
-        break;
+        this.canvas.nativeElement.style.cursor = "pointer";
+        return obj.id;
+      } else {
+        this.canvas.nativeElement.style.cursor = "default";
       }
     }
+  }
+
+  private openMapData(id: number): void {
+    const dialogRef = this.dialog.open<MapDataComponent>(MapDataComponent, {data: id})
   }
 }
