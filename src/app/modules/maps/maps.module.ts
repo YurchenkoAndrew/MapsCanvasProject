@@ -11,6 +11,7 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
 import {MapDataComponent} from './components/map-data/map-data.component';
 import {MatDialogModule} from "@angular/material/dialog";
+import {MapDataService} from "./services/map-data.service";
 
 @NgModule({
   declarations: [MapComponent, MapDataComponent],
@@ -24,7 +25,7 @@ import {MatDialogModule} from "@angular/material/dialog";
     MatIconModule,
     MatDialogModule,
   ],
-  providers: [MapService],
+  providers: [MapService, MapDataService],
 })
 export class MapsModule {
 }

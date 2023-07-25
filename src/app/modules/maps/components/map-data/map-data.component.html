@@ -1,2 +1,5 @@
-<p>map-data works!</p>
-<p>{{data}}</p>
+<ng-container *ngIf="mapData">
+  <p>map-data works!</p>
+  <p>{{mapData.id}}</p>
+  <h1>{{mapData.title}}</h1>
+</ng-container>

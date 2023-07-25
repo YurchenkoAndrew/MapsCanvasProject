@@ -120,7 +120,9 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
     }
     // Возвращаем состояние из стека
     this.ctx.restore();
+    // Слушаем движение мышки по канвасу
     this.canvas.nativeElement.addEventListener<"mousemove">('mousemove', this.mouseMove.bind(this));
+    // Слушаем событие двойного клика по канвасу
     this.canvas.nativeElement.addEventListener<"dblclick">('dblclick', this.mouseClick.bind(this));
   }
 
@@ -146,6 +148,7 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
     }
   }
 
+  // Проверяем нахождение точек мыши в объекте
   private objectCheck($event: MouseEvent): number | void {
     const x = $event.offsetX;
     const y = $event.offsetY;
