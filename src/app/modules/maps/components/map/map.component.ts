@@ -1,4 +1,4 @@
-import {AfterContentChecked, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild,} from '@angular/core';
+import {AfterContentChecked, Component, ElementRef, OnDestroy, OnInit, ViewChild,} from '@angular/core';
 import {MapService} from '../../services/map.service';
 import {MapItem} from '../../entities/mapItem';
 import {Subscription} from 'rxjs';
@@ -12,27 +12,14 @@ import {MapDataComponent} from "../map-data/map-data.component";
   styleUrls: ['./map.component.scss'],
 })
 export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
+
+  @ViewChild('canvasWrapper', {static: true})
+  canvasWrapper!: ElementRef<HTMLDivElement>;
   // Достаем канвас из ДОМ
   @ViewChild('canvas', {static: true}) canvas!: ElementRef<HTMLCanvasElement>;
 
   deltaY: number = 1;
 
-  // Слушаем колесико мышки
-  @HostListener('wheel', ['$event']) onMouseWheel($event: WheelEvent) {
-    if ($event.deltaY > 0) {
-      if (this.startScale == this.deltaY) {
-        return;
-      }
-      this.deltaY = parseFloat((this.deltaY - 0.05).toFixed(2));
-    } else {
-      this.deltaY = parseFloat((this.deltaY + 0.05).toFixed(2));
-    }
-    // this.canvas.nativeElement.style.transformOrigin = this.pointToZoomX + "px " + this.pointToZoomY + "px";
-    this.canvas.nativeElement.style.transform = `scale(${this.deltaY}, ${this.deltaY})`;
-  }
-
-  @ViewChild('canvasWrapper', {static: true})
-  canvasWrapper!: ElementRef<HTMLDivElement>;
   windowWidth = window.innerWidth;
   windowHeight = window.innerHeight;
   startScale: number = 1;
@@ -41,14 +28,13 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
   mapItemImageSub?: Subscription;
   private ctx!: CanvasRenderingContext2D;
   image: HTMLImageElement = new Image();
-  imageUrl!: string;
-  pointToZoomX = 10;
-  pointToZoomY = 10;
+  dragPosition = {x: 0, y: 0};
 
   constructor(private service: MapService, private dialog: MatDialog) {
     // Получаем карту
-    this.mapItemSub = service.getMap(36).subscribe((response) => {
+    this.mapItemSub = service.getMap(49).subscribe((response) => {
       this.mapItem = response;
+      this.mapItem.map_data.reverse();
       // Получаем изображение для карты
       this.mapItemImageSub = service.getImageMap(response.image).subscribe({
         next: (response: Blob) => {
@@ -95,8 +81,6 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
       this.canvas.nativeElement.height = this.image.height;
       // Ставим изображение карты в канвас
       this.ctx.drawImage(this.image, 0, 0, this.image.width, this.image.height);
-      // Применяем стилями масштабирование изображения и канваса
-      this.canvas.nativeElement.style.transform = `scale(${this.startScale}, ${this.startScale})`;
       // Сохраняем в стек текущее состояние
       this.ctx.save();
       // Добавляем объекты на канвас
@@ -109,7 +93,7 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
     if (mapData.length > 0) {
       mapData.map((mapData: MapData) => {
         this.ctx.strokeStyle = 'blue';
-        this.ctx.lineWidth = 10;
+        this.ctx.lineWidth = 5;
         this.ctx.strokeRect(
           mapData.left,
           mapData.top,
@@ -118,12 +102,16 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
         );
       });
     }
+    // Применяем стилями масштабирование изображения и канваса
+    this.canvas.nativeElement.style.transform = `scale(${this.deltaY}, ${this.deltaY})`;
     // Возвращаем состояние из стека
     this.ctx.restore();
     // Слушаем движение мышки по канвасу
     this.canvas.nativeElement.addEventListener<"mousemove">('mousemove', this.mouseMove.bind(this));
     // Слушаем событие двойного клика по канвасу
     this.canvas.nativeElement.addEventListener<"dblclick">('dblclick', this.mouseClick.bind(this));
+    // Слушаем события колесика мышки
+    this.canvas.nativeElement.addEventListener<"wheel">('wheel', this.onMouseWheel.bind(this));
   }
 
   // Методы для кнопки, для мобильных устройств
@@ -137,14 +125,33 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
     this.canvas.nativeElement.style.transform = `scale(${this.deltaY}, ${this.deltaY})`;
   }
 
+  private onMouseWheel($event: WheelEvent): void {
+    if ($event.deltaY > 0) {
+      if (this.startScale == this.deltaY) {
+        this.dragPosition = {x: 0, y: 0};
+        return;
+      }
+      this.deltaY = parseFloat((this.deltaY - 0.05).toFixed(2));
+    } else {
+      if (this.deltaY >= 1) {
+        return;
+      }
+      this.deltaY = parseFloat((this.deltaY + 0.05).toFixed(2));
+    }
+
+    this.canvas.nativeElement.style.transform = `scale(${this.deltaY}, ${this.deltaY})`;
+  }
+
   private mouseMove($event: MouseEvent): void {
     this.objectCheck($event);
   }
 
   private mouseClick($event: MouseEvent): void {
+    console.log('x = ' + $event.offsetX)
+    console.log('y = ' + $event.offsetY)
     const id: number | void = this.objectCheck($event);
     if (id) {
-      this.openMapData(id);
+      this.openMapData(id, $event);
     }
   }
 
@@ -167,7 +174,7 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
     }
   }
 
-  private openMapData(id: number): void {
-    const dialogRef = this.dialog.open<MapDataComponent>(MapDataComponent, {data: id})
+  private openMapData(id: number, $event: MouseEvent): void {
+    const dialogRef = this.dialog.open<MapDataComponent>(MapDataComponent, {data: {id: id, event: $event}})
   }
 }

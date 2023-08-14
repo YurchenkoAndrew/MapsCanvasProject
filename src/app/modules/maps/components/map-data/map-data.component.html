@@ -2,4 +2,13 @@
   <p>map-data works!</p>
   <p>{{mapData.id}}</p>
   <h1>{{mapData.title}}</h1>
+  <p>Клик по карте по Х координате = {{event.offsetX}}</p>
+  <p>Клик по карте по Y координате = {{event.offsetY}}</p>
+  <hr>
+  <p>Расположение объекта по Х координате = {{mapData.left}}</p>
+  <p>Расположение объекта по Y координате = {{mapData.top}}</p>
+  <p>Длинна = {{mapData.width}}</p>
+  <p>Высота = {{mapData.height}}</p>
+  <p>Объект попадает по X от {{mapData.left}} до {{mapData.left + mapData.width}}</p>
+  <p>Объект попадает по Y от {{mapData.top}} до {{mapData.top + mapData.height}}</p>
 </ng-container>

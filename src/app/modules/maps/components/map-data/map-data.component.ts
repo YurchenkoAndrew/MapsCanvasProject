@@ -10,9 +10,14 @@ import {MapDataService} from "../../services/map-data.service";
 })
 export class MapDataComponent {
   mapData?: MapData;
+  event: MouseEvent;
 
-  constructor(private dialogRef: MatDialogRef<MapDataComponent>, @Inject(MAT_DIALOG_DATA) private data: number, private service: MapDataService) {
-    this.service.getData(data).subscribe({
+  constructor(private dialogRef: MatDialogRef<MapDataComponent>, @Inject(MAT_DIALOG_DATA) private data: {
+    id: number,
+    event: MouseEvent
+  }, private service: MapDataService) {
+    this.event = data.event;
+    this.service.getData(data.id).subscribe({
       next: (response: MapData) => {
         this.mapData = response;
       }

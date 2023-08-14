@@ -12,9 +12,10 @@ import {MatIconModule} from '@angular/material/icon';
 import {MapDataComponent} from './components/map-data/map-data.component';
 import {MatDialogModule} from "@angular/material/dialog";
 import {MapDataService} from "./services/map-data.service";
+import {MapItemComponent} from './components/map-item/map-item.component';
 
 @NgModule({
-  declarations: [MapComponent, MapDataComponent],
+  declarations: [MapComponent, MapDataComponent, MapItemComponent],
   imports: [
     CommonModule,
     MapsRoutingModule,
