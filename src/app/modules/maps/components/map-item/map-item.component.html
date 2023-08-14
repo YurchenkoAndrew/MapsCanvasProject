@@ -1,0 +1,16 @@
+<mat-grid-list cols="1" rowHeight="100%">
+  <mat-grid-tile>
+    <div class="buttons-zoom">
+      <button mat-fab color="primary" (click)="zoomAdd()">
+        <mat-icon>add</mat-icon>
+      </button>
+      <button mat-fab color="primary" (click)="zoomRemove()" [disabled]="startScale == deltaY">
+        <mat-icon>remove</mat-icon>
+      </button>
+    </div>
+    <div class="wrapper" #canvasWrapper cdkDrag [cdkDragFreeDragPosition]="dragPosition">
+      <canvas #canvasBg></canvas>
+      <canvas #canvasObjects class="canvasObjects"></canvas>
+    </div>
+  </mat-grid-tile>
+</mat-grid-list>
