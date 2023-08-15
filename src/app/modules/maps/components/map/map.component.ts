@@ -32,7 +32,7 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
 
   constructor(private service: MapService, private dialog: MatDialog) {
     // Получаем карту
-    this.mapItemSub = service.getMap(49).subscribe((response) => {
+    this.mapItemSub = service.getMap(36).subscribe((response) => {
       this.mapItem = response;
       this.mapItem.map_data.reverse();
       // Получаем изображение для карты
