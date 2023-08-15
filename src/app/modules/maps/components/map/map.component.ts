@@ -79,6 +79,8 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
       this.deltaY = this.startScale;
       this.canvas.nativeElement.width = this.image.width;
       this.canvas.nativeElement.height = this.image.height;
+      // Применяем стилями масштабирование изображения и канваса
+      this.canvas.nativeElement.style.transform = `scale(${this.deltaY}, ${this.deltaY})`;
       // Ставим изображение карты в канвас
       this.ctx.drawImage(this.image, 0, 0, this.image.width, this.image.height);
       // Сохраняем в стек текущее состояние
@@ -102,8 +104,6 @@ export class MapComponent implements OnInit, AfterContentChecked, OnDestroy {
         );
       });
     }
-    // Применяем стилями масштабирование изображения и канваса
-    this.canvas.nativeElement.style.transform = `scale(${this.deltaY}, ${this.deltaY})`;
     // Возвращаем состояние из стека
     this.ctx.restore();
     // Слушаем движение мышки по канвасу
